@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII Camera</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-camera"></i> ASCII Camera</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <button id="startCamera" class="btn-primary">
+                    <i class="fas fa-play"></i> Start Camera
+                </button>
+                <button id="stopCamera" disabled class="btn-secondary">
+                    <i class="fas fa-stop"></i> Stop Camera
+                </button>
+                <button id="toggleVideo" class="btn-secondary">
+                    <i class="fas fa-eye"></i> Show Video
+                </button>
+            </div>
+            
+            <div class="control-group">
+                <label for="resolution"><i class="fas fa-expand-alt"></i> Resolution:</label>
+                <select id="resolution">
+                    <option value="ultra-low">Ultra Low (40×22)</option>
+                    <option value="low">Low (60×34)</option>
+                    <option value="medium" selected>Medium (100×56)</option>
+                    <option value="high">High (140×79)</option>
+                    <option value="ultra">Ultra (180×101)</option>
+                    <option value="native">Native (Full)</option>
+                </select>
+                
+                <label for="asciiStyle"><i class="fas fa-font"></i> Style:</label>
+                <select id="asciiStyle">
+                    <option value="simple">Simple</option>
+                    <option value="detailed" selected>Detailed</option>
+                    <option value="blocks">Blocks</option>
+                    <option value="inverse">Inverse</option>
+                    <option value="binary">Binary</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <button id="captureFrame" class="btn-success">
+                    <i class="fas fa-camera-retro"></i> Capture Frame
+                </button>
+                <button id="saveImage" class="btn-success" disabled>
+                    <i class="fas fa-save"></i> Save Image
+                </button>
+                <button id="printAscii" class="btn-success">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button id="copyClipboard" class="btn-success">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+        </div>
+
+        <div class="camera-container">
+            <div class="video-wrapper">
+                <video id="video" autoplay muted playsinline></video>
+                <div class="video-label">
+                    <i class="fas fa-video"></i> Camera Feed
+                    <span id="videoResolution">-</span>
+                </div>
+            </div>
+            
+            <div class="ascii-wrapper">
+                <div class="ascii-container">
+                    <pre id="asciiOutput" class="ascii-display"></pre>
+                </div>
+                <div class="ascii-label">
+                    <i class="fas fa-keyboard"></i> ASCII Output 
+                    <span id="asciiResolution">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-item">
+                <i class="fas fa-info-circle"></i>
+                <span>Status:</span>
+                <span id="status" class="status-indicator">Not started</span>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Frame Rate:</span>
+                <span id="frameRate">-</span>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-expand-arrows-alt"></i>
+                <span>ASCII Size:</span>
+                <span id="asciiSize">-</span>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-clock"></i>
+                <span>Last Capture:</span>
+                <span id="lastCapture">Never</span>
+            </div>
+        </div>
+
+        <!-- Capture Modal -->
+        <div class="modal" id="captureModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-camera-retro"></i> Captured ASCII Frame</h3>
+                    <button class="close-btn" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <pre id="capturedAscii" class="captured-ascii"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button id="saveCapture" class="btn-success">
+                        <i class="fas fa-save"></i> Save as Image
+                    </button>
+                    <button id="copyCapture" class="btn-success">
+                        <i class="fas fa-copy"></i> Copy Text
+                    </button>
+                    <button id="printCapture" class="btn-success">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                    <button id="downloadText" class="btn-secondary">
+                        <i class="fas fa-file-download"></i> Download .txt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
