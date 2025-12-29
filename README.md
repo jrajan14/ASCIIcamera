@@ -1,159 +1,103 @@
-#📷 ASCII Camera — Browser-Based Real-Time ASCII Art
+# 📷 ASCII Camera
 
-A real-time ASCII camera web app that converts your live camera feed into animated ASCII art directly in the browser.
-No installs. No backend. Just grant camera access and enjoy the terminal-style visuals.
+A **real-time browser-based ASCII camera** that converts your live webcam feed into animated ASCII art.  
+No installs, no backend — everything runs locally in your browser.
 
-Built entirely with web technologies and deployed via GitHub Pages.
+Built with web technologies and deployed using **GitHub Pages**.
 
-✨ Features
+---
 
-🎥 Live Camera → ASCII Conversion
-Real-time transformation of your webcam feed into ASCII art.
+## ✨ Features
 
-📐 Multiple Resolution Modes
+- 🎥 **Live Camera to ASCII**
+  - Real-time conversion of webcam video into ASCII art
 
-Ultra Low
+- 📐 **Resolution Modes**
+  - Ultra Low  
+  - Low  
+  - Medium  
+  - High  
+  - Ultra High  
+  - Native (camera resolution)
 
-Low
+- 🎨 **ASCII Styles**
+  - Simple  
+  - Detailed  
+  - Blocks  
+  - Inverse  
+  - Binary  
 
-Medium
+- 🖼️ **Frame Capture**
+  - Capture the current ASCII frame
+  - Save as an image
+  - Copy raw ASCII text
+  - Print as a **PDF** with preserved formatting
 
-High
+- 📊 **Real-Time Status Info**
+  - Camera status
+  - Frame rate (FPS)
+  - ASCII output size (rows × columns)
+  - Last capture timestamp
 
-Ultra High
+- 🌐 **Fully Client-Side**
+  - No servers
+  - No uploads
+  - Works offline after loading
 
-Native (camera resolution)
+---
 
-🎨 ASCII Styles
+## 🚀 Live Demo
+https://jrajan14.github.io/ASCIIcamera/
 
-Simple
+👉 ****
 
-Detailed
+> ⚠️ Camera permission is required  
+> Best viewed on desktop browsers (Chrome / Firefox recommended)
 
-Blocks
+---
 
-Inverse
+## 🛠️ How It Works
 
-Binary
+1. Captures live video using the **Web Media API**
+2. Downscales frames based on the selected resolution
+3. Maps pixel brightness to ASCII characters
+4. Renders output using a monospaced grid
+5. Applies visual styles for different artistic effects
 
-🖼️ Capture Frames
+All processing happens locally in real time.
 
-Freeze the current ASCII frame
+---
 
-Save as an image
+## 📸 Camera Permissions
 
-Copy raw ASCII text
+This app requires access to your camera.
 
-Print to PDF (preserves ASCII formatting)
+- Camera data is processed **only in your browser**
+- No video, images, or data are uploaded or stored
+- No analytics or tracking
 
-🧾 Printable ASCII Output
+---
 
-Generates clean, monospaced ASCII PDFs
+## 🖨️ Export & Print
 
-Perfect for posters, zines, or archival prints
+- **Save Image**  
+  Exports the rendered ASCII frame as an image
 
-📊 Real-Time Status Panel
+- **Print PDF**  
+  Generates a print-ready PDF containing the ASCII text
 
-Camera status
+- **Copy ASCII**  
+  Copies the raw ASCII characters exactly as displayed
 
-Frame rate (FPS)
+---
 
-ASCII resolution (rows × columns)
+## 🧪 Tested Browsers
 
-Last capture timestamp
+- Google Chrome (Desktop)
+- Mozilla Firefox (Desktop)
+- Chromium-based browsers
 
-🌐 Runs Fully in the Browser
+---
 
-No server
-
-No uploads
-
-Works offline after load
-
-🚀 Live Demo
-
-👉 Open ASCII Camera
-
-⚠️ Requires browser camera permission
-Best experienced on desktop browsers (Chrome / Firefox recommended)
-
-🛠️ How It Works
-
-Captures live video using the Web Media API
-
-Downscales frames based on selected resolution
-
-Converts pixel brightness into ASCII characters
-
-Renders output using a monospaced grid for accuracy
-
-Applies style filters for different artistic effects
-
-Everything runs locally — your camera feed never leaves your machine.
-
-📸 Permissions
-
-This app requires camera access to function.
-
-The camera is accessed only in your browser
-
-No data is recorded, stored, or transmitted
-
-All processing is done locally in real time
-
-🖨️ Printing & Export
-
-Save Image → exports the rendered ASCII frame
-
-Print PDF → generates a print-ready document with ASCII text
-
-Copy Text → copies raw ASCII characters exactly as displayed
-
-🧪 Tested On
-
-Chrome (Windows / Linux)
-
-Firefox (Windows / Linux)
-
-Chromium-based browsers
-
-📦 Deployment
-
-This project is deployed using GitHub Pages.
-
-To run locally:
-
-git clone https://github.com/<your-username>/<repo-name>.git
-cd <repo-name>
-# open index.html in your browser
-
-
-Note: Camera access requires a secure context
-(localhost or HTTPS)
-
-🧠 Inspiration
-
-Inspired by:
-
-Terminal aesthetics
-
-Retro computing
-
-ASCII art culture
-
-Real-time media processing in the browser
-
-📄 License
-
-MIT License
-Feel free to fork, modify, and build on top of it.
-
-⭐ If You Like It
-
-Star the repo ⭐
-
-Share the demo
-
-Remix the styles
-
-Print your ASCII frames 😄
+## 📦 Running Locally
+- Download the repo and open index.html
