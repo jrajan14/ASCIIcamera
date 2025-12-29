@@ -9,12 +9,24 @@ Built with web technologies and deployed using **GitHub Pages**.
 
 ## ✨ Features
 
-- 🎥 **Live Camera to ASCII** — Real-Time conversion of webcam video into ASCII art
-- 📐 **Resolution Modes:** Ultra Low < Low < Medium < High < Ultra High < Native
-- 🎨 **ASCII Styles:** Simple > Detailed > Blocks > Inverse > Binary
-- 🖼️ **Frame Capture:** capture frame, save image, copy raw ASCII text, print as PDF
-- 📊 **Real-Time Status Info:** camera status, FPS, ASCII size (rows × columns), last capture time
-- 🌐 **Fully Client-Side:** no servers, no uploads, works offline after loading
+- 🎥 **Live Camera to ASCII**  
+  ⏱️ Real-time rendering · 📷 Webcam input · 🖥️ Monospaced output
+
+- 📐 **Resolution Modes**  
+  🔽 Ultra Low · 🔹 Low · ⚖️ Medium · 🔼 High · 🚀 Ultra High · 🟢 Native
+
+- 🎨 **ASCII Styles**  
+  ▫️ Simple · 🧩 Detailed · 🧱 Blocks · 🔄 Inverse · ⚫ Binary
+
+- 📸 **Frame Capture**  
+  ⏺️ Capture frame · 🖼️ Save image · 📋 Copy ASCII · 🖨️ Print PDF
+
+- 📊 **Live Status Info**  
+  🎞️ FPS · 📐 Rows × Columns · ⏰ Timestamp · 🎥 Camera state
+
+- 🌐 **Client-Side Only**  
+  🚫 No servers · 🚫 No uploads · 🔒 Local processing · ⚡ Offline-ready
+
 
 ---
 
