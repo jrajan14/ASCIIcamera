@@ -508,3 +508,13 @@ video {
         font-size: 4px;
     }
 }
+
+.control-group select {
+    min-width: 160px;
+}
+
+@media (max-width: 768px) {
+    .control-group select {
+        min-width: 100%;
+    }
+}
