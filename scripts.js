@@ -56,10 +56,10 @@ class ASCIICamera {
         // ASCII characters are roughly 2:1 (height:width), so we adjust target dimensions
         this.resolutions = {
             'ultra-low': { width: 40, height: 22 },   // 16:9 adjusted for character aspect
-            'low': { width: 60, height: 34 },        // 16:9 adjusted
-            'medium': { width: 100, height: 56 },    // 16:9 adjusted
-            'high': { width: 140, height: 79 },      // 16:9 adjusted
-            'ultra': { width: 180, height: 101 },    // 16:9 adjusted
+            'low': { width: 60, height: 34 },
+            'medium': { width: 100, height: 56 },
+            'high': { width: 140, height: 79 },
+            'ultra': { width: 180, height: 101 }, 
             'native': { width: 0, height: 0 }        // Will be calculated
         };
         
@@ -322,22 +322,82 @@ class ASCIICamera {
         
         let asciiArt = '';
         
-        // Adjust sampling based on character aspect ratio
-        for (let y = 0; y < height; y++) {
-            let line = '';
-            for (let x = 0; x < width; x++) {
-                const index = (y * width + x) * 4;
-                const r = data[index];
-                const g = data[index + 1];
-                const b = data[index + 2];
-                
-                // Calculate brightness (perceptual luminance)
-                const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
-                const charIndex = Math.floor((brightness / 255) * (chars.length - 1));
-                
-                line += chars[charIndex];
+        // For binary style, we can add simple dithering for better visual effect
+        if (style === 'binary') {
+            // Create a copy of the image data for dithering
+            const ditheredData = new Uint8ClampedArray(data);
+            
+            // Simple Floyd-Steinberg dithering for better binary representation
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const idx = (y * width + x) * 4;
+                    
+                    // Get old pixel value (brightness)
+                    const oldR = ditheredData[idx];
+                    const oldG = ditheredData[idx + 1];
+                    const oldB = ditheredData[idx + 2];
+                    const oldBrightness = 0.299 * oldR + 0.587 * oldG + 0.114 * oldB;
+                    
+                    // Determine new pixel value (0 or 255)
+                    const newBrightness = oldBrightness > 127 ? 255 : 0;
+                    
+                    // Calculate quantization error
+                    const error = oldBrightness - newBrightness;
+                    
+                    // Update pixel
+                    const factor = newBrightness / 255;
+                    ditheredData[idx] = factor * 255;
+                    ditheredData[idx + 1] = factor * 255;
+                    ditheredData[idx + 2] = factor * 255;
+                    
+                    // Distribute error to neighboring pixels (Floyd-Steinberg)
+                    if (x + 1 < width) {
+                        const rightIdx = idx + 4;
+                        ditheredData[rightIdx] = Math.min(255, Math.max(0, ditheredData[rightIdx] + error * 7/16));
+                    }
+                    if (y + 1 < height) {
+                        const downIdx = idx + width * 4;
+                        if (x > 0) {
+                            const downLeftIdx = downIdx - 4;
+                            ditheredData[downLeftIdx] = Math.min(255, Math.max(0, ditheredData[downLeftIdx] + error * 3/16));
+                        }
+                        ditheredData[downIdx] = Math.min(255, Math.max(0, ditheredData[downIdx] + error * 5/16));
+                        if (x + 1 < width) {
+                            const downRightIdx = downIdx + 4;
+                            ditheredData[downRightIdx] = Math.min(255, Math.max(0, ditheredData[downRightIdx] + error * 1/16));
+                        }
+                    }
+                }
             }
-            asciiArt += line + '\n';
+            
+            // Convert dithered image to binary
+            for (let y = 0; y < height; y++) {
+                let line = '';
+                for (let x = 0; x < width; x++) {
+                    const idx = (y * width + x) * 4;
+                    const brightness = 0.299 * ditheredData[idx] + 0.587 * ditheredData[idx + 1] + 0.114 * ditheredData[idx + 2];
+                    line += brightness > 127 ? '1' : '0';
+                }
+                asciiArt += line + '\n';
+            }
+        } else {
+            // Normal ASCII conversion for other styles
+            for (let y = 0; y < height; y++) {
+                let line = '';
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const r = data[index];
+                    const g = data[index + 1];
+                    const b = data[index + 2];
+                    
+                    // Calculate brightness (perceptual luminance)
+                    const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+                    const charIndex = Math.floor((brightness / 255) * (chars.length - 1));
+                    
+                    line += chars[charIndex];
+                }
+                asciiArt += line + '\n';
+            }
         }
         
         return asciiArt;
