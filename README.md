@@ -46,10 +46,7 @@ Built with web technologies and deployed using **GitHub Pages**.
 
 ---
 
-## 🚀 Live Demo
-https://jrajan14.github.io/ASCIIcamera/
-
-👉 ****
+## 🚀 👉 **[LIVE Demo](https://jrajan14.github.io/ASCIIcamera/)**
 
 > ⚠️ Camera permission is required  
 > Best viewed on desktop browsers (Chrome / Firefox recommended)
