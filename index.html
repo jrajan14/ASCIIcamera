@@ -25,6 +25,11 @@
             </div>
             
             <div class="control-group">
+                <label for="cameraSelect"><i class="fas fa-camera"></i> Camera:</label>
+                <select id="cameraSelect">
+                    <option value="">Select Camera...</option>
+                </select>
+                
                 <label for="resolution"><i class="fas fa-expand-alt"></i> Resolution:</label>
                 <select id="resolution">
                     <option value="ultra-low">Ultra Low (40×22)</option>
@@ -115,6 +120,9 @@
                     <pre id="capturedAscii" class="captured-ascii"></pre>
                 </div>
                 <div class="modal-footer">
+                    <button id="refreshCameras" class="btn-secondary">
+                        <i class="fas fa-sync-alt"></i> Refresh Cameras
+                    </button>
                     <button id="saveCapture" class="btn-success">
                         <i class="fas fa-save"></i> Save as Image
                     </button>
@@ -131,8 +139,7 @@
             </div>
         </div>
     </div>
+
     <script src="scripts.js"></script>
 </body>
-
 </html>
-
