@@ -72,6 +72,7 @@ class ASCIICamera {
         
         this.bindEvents();
         this.updateDisplayInfo();
+        this.requestMinimalPermission();
     }
     
     bindEvents() {
@@ -113,6 +114,74 @@ class ASCIICamera {
         });
     }
     
+    async requestMinimalPermission() {
+        try {
+            // First, check if we already have permission by trying to enumerate devices
+            // without requesting camera access first
+            await this.enumerateCameras();
+            
+            // If we got camera names (not just generic names), we already have permission
+            const hasPermission = this.availableCameras.some(camera => 
+                camera.label && !camera.label.startsWith('Camera ')
+            );
+            
+            if (hasPermission) {
+                console.log('Already have camera permission');
+                return;
+            }
+            
+            // We don't have permission yet. Try to get minimal permission
+            // by requesting access to a very low-resolution camera
+            this.status.textContent = 'Requesting camera access...';
+            this.status.className = 'status-indicator loading';
+            
+            // Try to get permission with minimal constraints
+            const tempStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 1 },  // Minimal resolution
+                    height: { ideal: 1 }, // Minimal resolution
+                    frameRate: { ideal: 1 } // Minimal framerate
+                },
+                audio: false
+            });
+            
+            // Immediately stop the stream (we just needed permission)
+            tempStream.getTracks().forEach(track => {
+                track.stop();
+            });
+            
+            // Now enumerate cameras again - this time we should get proper labels
+            await this.enumerateCameras();
+            
+            this.status.textContent = 'Ready';
+            this.status.className = 'status-indicator';
+            
+            // If we have cameras, auto-select the first one
+            if (this.availableCameras.length > 0 && !this.selectedCameraId) {
+                this.cameraSelect.value = this.availableCameras[0].deviceId;
+                this.selectedCameraId = this.availableCameras[0].deviceId;
+            }
+            
+        } catch (error) {
+            console.log('Minimal permission request failed or user denied:', error);
+            
+            // User denied permission or error occurred
+            // Still try to enumerate cameras (will show generic names)
+            await this.enumerateCameras();
+            
+            this.status.textContent = 'Click "Start Camera" to begin';
+            this.status.className = 'status-indicator';
+            
+            // Update camera select to indicate permission needed
+            if (this.availableCameras.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = '⚠️ Camera access required';
+                this.cameraSelect.appendChild(option);
+            }
+        }
+    }
+
     async enumerateCameras() {
         try {
             const devices = await navigator.mediaDevices.enumerateDevices();
@@ -123,39 +192,100 @@ class ASCIICamera {
                 this.cameraSelect.remove(1);
             }
             
+            // If no cameras found
+            if (this.availableCameras.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No cameras detected';
+                this.cameraSelect.appendChild(option);
+                return this.availableCameras;
+            }
+            
+            // Check if we have proper labels (indicates we have permission)
+            const hasDetailedLabels = this.availableCameras.some(camera => 
+                camera.label && !camera.label.startsWith('Camera ')
+            );
+            
             // Add camera options
             this.availableCameras.forEach((camera, index) => {
                 const option = document.createElement('option');
                 option.value = camera.deviceId;
                 
-                // Try to get a meaningful label
                 let label = camera.label || `Camera ${index + 1}`;
                 
-                // Determine camera type
-                if (camera.label) {
-                    if (camera.label.toLowerCase().includes('back') || 
-                        camera.label.toLowerCase().includes('rear')) {
-                        label = '📷 Back Camera';
-                    } else if (camera.label.toLowerCase().includes('front')) {
-                        label = '📱 Front Camera';
-                    } else if (camera.label.toLowerCase().includes('external')) {
-                        label = '🔌 External Camera';
+                // Check if we have permission (detailed labels)
+                if (!hasDetailedLabels && camera.label && camera.label.startsWith('Camera ')) {
+                    // We don't have full permission yet
+                    label = `🔒 ${label} (permission needed)`;
+                } else {
+                    // We have permission, show detailed info
+                    if (camera.label) {
+                        if (camera.label.toLowerCase().includes('back') || 
+                            camera.label.toLowerCase().includes('rear')) {
+                            label = '📷 Back Camera';
+                        } else if (camera.label.toLowerCase().includes('front')) {
+                            label = '📱 Front Camera';
+                        } else if (camera.label.toLowerCase().includes('external')) {
+                            label = '🔌 External Camera';
+                        } else if (camera.label.toLowerCase().includes('virtual')) {
+                            label = '🖥️ Virtual Camera';
+                        } else {
+                            label = `📹 ${label}`;
+                        }
+                    } else {
+                        label = `📹 Camera ${index + 1}`;
                     }
                 }
                 
                 option.textContent = label;
+                option.title = camera.label || `Camera device ${index + 1}`;
                 this.cameraSelect.appendChild(option);
             });
             
-            // If only one camera, auto-select it
-            if (this.availableCameras.length === 1) {
-                this.cameraSelect.value = this.availableCameras[0].deviceId;
-                this.selectedCameraId = this.availableCameras[0].deviceId;
+            // Auto-select logic
+            if (this.selectedCameraId) {
+                // Keep current selection if it exists
+                if (!this.availableCameras.some(cam => cam.deviceId === this.selectedCameraId)) {
+                    this.selectedCameraId = null;
+                    this.cameraSelect.value = '';
+                }
+            } else if (this.availableCameras.length > 0) {
+                // Try to auto-select back camera first, then front, then any
+                const backCamera = this.availableCameras.find(cam => 
+                    cam.label && (cam.label.toLowerCase().includes('back') || 
+                                 cam.label.toLowerCase().includes('rear'))
+                );
+                
+                const frontCamera = this.availableCameras.find(cam => 
+                    cam.label && cam.label.toLowerCase().includes('front')
+                );
+                
+                if (backCamera) {
+                    this.selectedCameraId = backCamera.deviceId;
+                    this.cameraSelect.value = backCamera.deviceId;
+                } else if (frontCamera) {
+                    this.selectedCameraId = frontCamera.deviceId;
+                    this.cameraSelect.value = frontCamera.deviceId;
+                } else {
+                    this.selectedCameraId = this.availableCameras[0].deviceId;
+                    this.cameraSelect.value = this.availableCameras[0].deviceId;
+                }
             }
             
             return this.availableCameras;
         } catch (error) {
             console.error('Error enumerating cameras:', error);
+            
+            // Show error in dropdown
+            while (this.cameraSelect.options.length > 1) {
+                this.cameraSelect.remove(1);
+            }
+            
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = '❌ Error detecting cameras';
+            this.cameraSelect.appendChild(option);
+            
             return [];
         }
     }
@@ -188,7 +318,12 @@ class ASCIICamera {
                 await this.enumerateCameras();
             }
             
-            // Build constraints based on selected camera
+            // Check if we need to update labels after getting permission
+            const needsPermissionUpdate = this.availableCameras.some(camera => 
+                camera.label && camera.label.startsWith('Camera ')
+            );
+            
+            // Build constraints
             const constraints = {
                 video: {
                     width: { ideal: 1920 },
@@ -201,7 +336,7 @@ class ASCIICamera {
             if (this.selectedCameraId) {
                 constraints.video.deviceId = { exact: this.selectedCameraId };
             } else {
-                // No camera selected, try to get the environment (back) camera first
+                // No camera selected, try to get environment camera
                 constraints.video.facingMode = 'environment';
             }
             
@@ -214,7 +349,12 @@ class ASCIICamera {
                 };
             });
             
-            // Update camera select to show which camera is active
+            // After getting permission, update camera list with proper labels
+            if (needsPermissionUpdate) {
+                await this.enumerateCameras();
+            }
+            
+            // Update UI for active camera
             if (this.selectedCameraId) {
                 const selectedCamera = this.availableCameras.find(cam => cam.deviceId === this.selectedCameraId);
                 if (selectedCamera) {
@@ -224,7 +364,11 @@ class ASCIICamera {
                     } else if (label.toLowerCase().includes('front')) {
                         label = '📱 Front Camera';
                     }
-                    this.cameraSelect.querySelector(`option[value="${this.selectedCameraId}"]`).textContent = `${label} ✓`;
+                    // Find and update the option
+                    const option = this.cameraSelect.querySelector(`option[value="${this.selectedCameraId}"]`);
+                    if (option) {
+                        option.textContent = `${label} ✓`;
+                    }
                 }
             }
             
@@ -258,6 +402,16 @@ class ASCIICamera {
                 this.selectedCameraId = null;
                 this.cameraSelect.value = '';
                 setTimeout(() => this.startCamera(), 1000);
+            }
+            if (error.name === 'NotAllowedError') {
+                this.status.textContent = 'Camera permission denied';
+                this.showAlert('Camera permission is required. Please allow camera access.', 'error');
+            } else if (error.name === 'NotFoundError') {
+                this.status.textContent = 'No camera found';
+                this.showAlert('No camera device found. Please connect a camera.', 'error');
+            } else if (error.name === 'NotReadableError') {
+                this.status.textContent = 'Camera in use';
+                this.showAlert('Camera is already in use by another application.', 'error');
             }
         }
     }
