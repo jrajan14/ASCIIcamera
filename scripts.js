@@ -2,6 +2,7 @@ class ASCIICamera {
     constructor() {
         // DOM Elements
         this.video = document.getElementById('video');
+        this.cameraSelect = document.getElementById('cameraSelect');
         this.asciiOutput = document.getElementById('asciiOutput');
         this.startButton = document.getElementById('startCamera');
         this.stopButton = document.getElementById('stopCamera');
@@ -12,6 +13,7 @@ class ASCIICamera {
         this.saveImageButton = document.getElementById('saveImage');
         this.printButton = document.getElementById('printAscii');
         this.copyButton = document.getElementById('copyClipboard');
+        this.refreshCamerasButton = document.getElementById('refreshCameras');
         
         // Modal elements
         this.captureModal = document.getElementById('captureModal');
@@ -32,6 +34,8 @@ class ASCIICamera {
         
         // Variables
         this.stream = null;
+        this.availableCameras = [];
+        this.selectedCameraId = null;
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
         this.animationId = null;
@@ -71,6 +75,7 @@ class ASCIICamera {
     }
     
     bindEvents() {
+        this.cameraSelect.addEventListener('change', () => this.onCameraChange());
         this.startButton.addEventListener('click', () => this.startCamera());
         this.stopButton.addEventListener('click', () => this.stopCamera());
         this.resolutionSelect.addEventListener('change', () => this.updateResolution());
@@ -82,6 +87,7 @@ class ASCIICamera {
         this.copyButton.addEventListener('click', () => this.copyToClipboard());
         
         // Modal events
+        this.refreshCamerasButton.addEventListener('click', () => this.refreshCameras());
         this.saveCaptureButton.addEventListener('click', () => this.saveCaptureAsImage());
         this.copyCaptureButton.addEventListener('click', () => this.copyCaptureToClipboard());
         this.printCaptureButton.addEventListener('click', () => this.printCapture());
@@ -107,19 +113,97 @@ class ASCIICamera {
         });
     }
     
+    async enumerateCameras() {
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            this.availableCameras = devices.filter(device => device.kind === 'videoinput');
+            
+            // Clear existing options except the first one
+            while (this.cameraSelect.options.length > 1) {
+                this.cameraSelect.remove(1);
+            }
+            
+            // Add camera options
+            this.availableCameras.forEach((camera, index) => {
+                const option = document.createElement('option');
+                option.value = camera.deviceId;
+                
+                // Try to get a meaningful label
+                let label = camera.label || `Camera ${index + 1}`;
+                
+                // Determine camera type
+                if (camera.label) {
+                    if (camera.label.toLowerCase().includes('back') || 
+                        camera.label.toLowerCase().includes('rear')) {
+                        label = '📷 Back Camera';
+                    } else if (camera.label.toLowerCase().includes('front')) {
+                        label = '📱 Front Camera';
+                    } else if (camera.label.toLowerCase().includes('external')) {
+                        label = '🔌 External Camera';
+                    }
+                }
+                
+                option.textContent = label;
+                this.cameraSelect.appendChild(option);
+            });
+            
+            // If only one camera, auto-select it
+            if (this.availableCameras.length === 1) {
+                this.cameraSelect.value = this.availableCameras[0].deviceId;
+                this.selectedCameraId = this.availableCameras[0].deviceId;
+            }
+            
+            return this.availableCameras;
+        } catch (error) {
+            console.error('Error enumerating cameras:', error);
+            return [];
+        }
+    }
+
+    onCameraChange() {
+        this.selectedCameraId = this.cameraSelect.value;
+        
+        // If camera is running, restart it with the new selection
+        if (this.stream) {
+            this.stopCamera();
+            setTimeout(() => {
+                this.startCamera();
+            }, 100);
+        }
+    }
+
+    async refreshCameras() {
+        this.showAlert('Refreshing camera list...', 'info');
+        await this.enumerateCameras();
+        this.showAlert('Camera list updated!', 'success');
+    }
+
     async startCamera() {
         try {
             this.status.textContent = 'Requesting camera access...';
             this.status.className = 'status-indicator loading';
             
+            // First, enumerate cameras if we haven't already
+            if (this.availableCameras.length === 0) {
+                await this.enumerateCameras();
+            }
+            
+            // Build constraints based on selected camera
             const constraints = {
                 video: {
                     width: { ideal: 1920 },
                     height: { ideal: 1080 },
-                    facingMode: 'environment',
                     aspectRatio: 16/9
                 }
             };
+            
+            // If a specific camera is selected, use it
+            if (this.selectedCameraId) {
+                constraints.video.deviceId = { exact: this.selectedCameraId };
+            } else {
+                // No camera selected, try to get the environment (back) camera first
+                constraints.video.facingMode = 'environment';
+            }
             
             this.stream = await navigator.mediaDevices.getUserMedia(constraints);
             this.video.srcObject = this.stream;
@@ -129,6 +213,20 @@ class ASCIICamera {
                     this.video.play().then(resolve);
                 };
             });
+            
+            // Update camera select to show which camera is active
+            if (this.selectedCameraId) {
+                const selectedCamera = this.availableCameras.find(cam => cam.deviceId === this.selectedCameraId);
+                if (selectedCamera) {
+                    let label = selectedCamera.label || 'Selected Camera';
+                    if (label.toLowerCase().includes('back') || label.toLowerCase().includes('rear')) {
+                        label = '📷 Back Camera';
+                    } else if (label.toLowerCase().includes('front')) {
+                        label = '📱 Front Camera';
+                    }
+                    this.cameraSelect.querySelector(`option[value="${this.selectedCameraId}"]`).textContent = `${label} ✓`;
+                }
+            }
             
             // Get actual video dimensions and calculate aspect ratio
             const videoWidth = this.video.videoWidth;
@@ -141,6 +239,7 @@ class ASCIICamera {
             this.startButton.disabled = true;
             this.stopButton.disabled = false;
             this.saveImageButton.disabled = false;
+            this.cameraSelect.disabled = true; // Disable camera selection while camera is active
             this.status.textContent = 'Active';
             this.status.className = 'status-indicator active';
             
@@ -152,6 +251,14 @@ class ASCIICamera {
             this.status.textContent = `Error: ${error.message}`;
             this.status.className = 'status-indicator';
             console.error('Camera error:', error);
+            
+            // If specific camera failed, try to get any camera
+            if (this.selectedCameraId && error.name === 'OverconstrainedError') {
+                this.showAlert('Selected camera not available. Trying any available camera...', 'warning');
+                this.selectedCameraId = null;
+                this.cameraSelect.value = '';
+                setTimeout(() => this.startCamera(), 1000);
+            }
         }
     }
     
@@ -172,12 +279,38 @@ class ASCIICamera {
         this.startButton.disabled = false;
         this.stopButton.disabled = true;
         this.saveImageButton.disabled = true;
+        this.cameraSelect.disabled = false; // Enable camera selection when camera stops
+        
+        // Reset camera labels
+        this.resetCameraLabels();
+        
         this.status.textContent = 'Stopped';
         this.status.className = 'status-indicator';
         this.frameRate.textContent = '-';
         this.videoResolution.textContent = '-';
     }
     
+    resetCameraLabels() {
+        // Reset all camera labels to remove checkmarks
+        const options = this.cameraSelect.querySelectorAll('option');
+        options.forEach(option => {
+            if (option.value) {
+                const camera = this.availableCameras.find(cam => cam.deviceId === option.value);
+                if (camera) {
+                    let label = camera.label || `Camera ${Array.from(options).indexOf(option)}`;
+                    if (label.toLowerCase().includes('back') || label.toLowerCase().includes('rear')) {
+                        label = '📷 Back Camera';
+                    } else if (label.toLowerCase().includes('front')) {
+                        label = '📱 Front Camera';
+                    } else if (label.toLowerCase().includes('external')) {
+                        label = '🔌 External Camera';
+                    }
+                    option.textContent = label;
+                }
+            }
+        });
+    }
+
     updateToggleVideoButton() {
         this.toggleVideoButton.innerHTML = this.showVideo ? 
             '<i class="fas fa-eye-slash"></i> Hide Video' : 
