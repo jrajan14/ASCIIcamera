@@ -7,7 +7,7 @@ Built with web technologies and deployed using **GitHub Pages**.
 
 ---
 
-## ✨ Features
+## ✨ Features 
 
 - 🎥 **Live Camera to ASCII**  
   ⏱️ Real-time rendering · 📷 Webcam input · 🖥️ Monospaced output
