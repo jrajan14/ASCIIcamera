@@ -1,7 +1,7 @@
 # 📷 ASCII Camera
 
 A **real-time browser-based ASCII camera** that converts your live webcam feed into animated ASCII art.  
-No installs, no backend — everything runs locally in your browser.
+No installs, no backend — everything runs locally in your browser. 
 
 Built with web technologies and deployed using **GitHub Pages**.
 
